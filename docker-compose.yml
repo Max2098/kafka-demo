@@ -1,0 +1,116 @@
+version: '3.8'
+services:
+
+  kafka-producer-demo:
+    image: kafka-producer-demo:0.0.1
+    build:
+      context: .
+      dockerfile: kafka-producer-demo/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka-demo
+    environment:
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka-demo:19092
+    networks:
+      - kafka-network
+
+  kafka-consumer-demo-one:
+    image: kafka-consumer-demo-one:0.0.1
+    build:
+      context: .
+      dockerfile: kafka-consumer-demo-one/Dockerfile
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres-one
+      - kafka-demo
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-one:5432/postgres
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka-demo:19092
+      - SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_TRUSTED_PACKAGES=*
+      - SPRING_KAFKA_CONSUMER_GROUP_ID=user-group-one
+      - SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET=earliest
+    networks:
+      - kafka-network
+
+  kafka-consumer-demo-two:
+    image: kafka-consumer-demo-two:0.0.1
+    build:
+      context: .
+      dockerfile: kafka-consumer-demo-two/Dockerfile
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres-two
+      - kafka-demo
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-two:5432/postgres
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+
+      - SERVER_PORT=8082
+
+      - SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_TRUSTED_PACKAGES=*
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka-demo:19092
+      - SPRING_KAFKA_CONSUMER_GROUP_ID=user-group-two
+      - SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET=earliest
+    networks:
+      - kafka-network
+
+  postgres-one:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - kafka-network
+
+  postgres-two:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    networks:
+      - kafka-network
+
+  kafka-demo:
+    image: apache/kafka:4.1.1
+    hostname: kafka-demo
+    container_name: kafka-demo
+    ports:
+      - "9092:9092"
+      - "19092:19092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka-demo:9093"
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,INTERNAL://0.0.0.0:19092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,INTERNAL://kafka-demo:19092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_BROKER_ID: 1
+      KAFKA_LOG_DIRS: /tmp/kafka-logs
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_NUM_PARTITIONS: 3
+      CLUSTER_ID: 4L6g3nShSRWGDqckbUxPOg
+    networks:
+      - kafka-network
+
+networks:
+  kafka-network:
+    driver: bridge

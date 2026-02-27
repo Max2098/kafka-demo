@@ -1,0 +1,2 @@
+rootProject.name = 'kafka-demo'
+include 'kafka-consumer-demo-one', 'kafka-consumer-demo-two', 'kafka-producer-demo'
