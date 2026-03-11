@@ -8,6 +8,7 @@ import java.time.ZonedDateTime;
 
 @Data
 public class User {
+    private String uniqueKey;
     private String name;
     private String phone;
     private BigDecimal balance;

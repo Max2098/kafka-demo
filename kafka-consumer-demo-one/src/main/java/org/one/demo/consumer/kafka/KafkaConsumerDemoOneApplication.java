@@ -10,4 +10,5 @@ public class KafkaConsumerDemoOneApplication {
         SpringApplication.run(KafkaConsumerDemoOneApplication.class, args);
     }
 
+    // TODO не реализована атомарность между комитом и записью в бд, когда kafka listener делает offset
 }

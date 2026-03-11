@@ -12,11 +12,18 @@ public class KafkaTopic {
     @Value("${demo.kafka.topics.user-topic:user-topic}")
     private String userTopic;
 
+    @Value("${demo.kafka.topics.replicas:3}")
+    private int replicas;
+
+    @Value("${demo.kafka.topics.partitions:2}")
+    private int partitions;
+
     @Bean
     public NewTopic userTopic() {
         return TopicBuilder
                 .name(userTopic)
-                .partitions(2)
+                .replicas(replicas)
+                .partitions(partitions)
                 .build();
     }
 }
