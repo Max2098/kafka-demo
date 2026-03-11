@@ -15,6 +15,11 @@ public class UserService {
 
     @Transactional
     public void save(UserEntity user) {
+        var existedUser = repository.findByUniqueKey(user.getUniqueKey());
+        if (existedUser.isPresent()) {
+            log.info("User had already been saved with key: {}", user.getUniqueKey());
+            return;
+        }
         var entity = repository.save(user);
         log.debug("Saved user entity: {}", entity);
     }
